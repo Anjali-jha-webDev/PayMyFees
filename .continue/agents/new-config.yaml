@@ -1,8 +1,0 @@
-name: Local Ollama Config
-version: 1.0.0
-schema: v1
-
-models:
-  - name: CodeLlama Local
-    provider: ollama
-    model: codellama:7b-instruct
