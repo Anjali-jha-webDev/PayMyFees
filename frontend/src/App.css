@@ -1,7 +1,7 @@
-/* #root {
-  max-width: 1280px;
+#root {
+  /* max-width: 1280px; */
   margin: 0 auto;
-  padding: 2rem;
+  /* padding: 2rem; */
   text-align: center;
 }
 
@@ -37,6 +37,657 @@
   padding: 2em;
 }
 
+/* student dashboard styles */
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+}
+
+
+.sidebar {
+  background: #2c3e50;
+  color: #fff;
+  width: 280px;
+  min-width: 280px;
+  padding: 1.5rem 1rem;
+  overflow-y: auto;
+  flex-shrink: 0;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  white-space: nowrap;
+  /* margin-right: 2rem; */
+}
+
+.sidebar nav li {
+  padding-left: 1rem;
+  font-size: 0.95rem;
+}
+
+.sidebar nav a,
+.sidebar nav li {
+  display: block;
+}
+
+.sidebar nav ul {
+  text-align: left;
+}
+
+.sidebar nav li {
+  padding-left: 0.5rem;
+  font-size: 1.3rem;
+}
+
+.sidebar h2 {
+  font-size: 1.4rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar nav li {
+  margin: 0.8rem 0;
+  cursor: pointer;
+}
+
+.student-main {
+  flex: 1;
+  padding: 2rem;
+  background: #f4f6f8;
+  overflow-y: auto;
+  width: 100%;
+  min-width: 0;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.dashboard-header h1 {
+  flex: 1;
+  text-align: left;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.logout-button {
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.reminder {
+  background: #fff3cd;
+  padding: 0.8rem 1rem;
+  border: 1px solid #ffeeba;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.summary-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  justify-content: space-between;
+}
+
+.summary-cards .card {
+  background: #fff;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  flex: 1;
+  min-width: 220px;
+  text-align: center;
+}
+
+.summary-cards .card h3{
+  margin-bottom: 10px;
+}
+
+.details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 1rem;
+  justify-content: space-between;
+}
+
+.details .breakdown, .details .payments {
+  background: #fff;
+  padding: 1rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  flex: 1;
+  min-width: 300px;
+}
+
+.details ul {
+  list-style: none;
+  padding: 0;
+}
+
+.details ul li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+}
+
+.details table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.details th, .details td {
+  padding: 0.6rem;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.details h3{
+  margin-bottom: 5px;
+}
+
+.download-btn {
+  padding: 0.3rem 0.6rem;
+  background: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
 .read-the-docs {
   color: #888;
+}
+
+
+
+/* Page Container Styles */
+.page-container {
+  flex: 1;
+  padding: 2rem;
+  background: #f4f6f8;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-container h1 {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+}
+
+/* Fee Summary Styles */
+.fee-breakdown {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-top: 1.5rem;
+}
+
+.fee-breakdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.fee-breakdown th, .fee-breakdown td {
+  padding: 0.8rem;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.fee-breakdown th {
+  background: #34495e;
+  color: #fff;
+}
+
+/* Pay Fees Styles */
+.pay-fees-container {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.fees-selection {
+  flex: 2;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.fee-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 0.8rem;
+  gap: 1rem;
+}
+
+.fee-item label {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.fee-item input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.fee-item .amount {
+  font-weight: bold;
+  color: #27ae60;
+  min-width: 100px;
+  text-align: right;
+}
+
+.fee-item .due-date {
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.payment-summary {
+  flex: 1;
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  height: fit-content;
+  position: sticky;
+  top: 2rem;
+}
+
+.payment-summary h2 {
+  color: #2c3e50;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.summary-item.total {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #27ae60;
+  border-bottom: none;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.pay-button, .btn-primary, .btn-secondary, .view-more {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  margin-top: 1rem;
+  background: #3498db;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.pay-button:hover, .btn-primary:hover {
+  background: #2980b9;
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  width: auto;
+  margin-left: 0.5rem;
+}
+
+.btn-secondary:hover {
+  background: #7f8c8d;
+}
+
+.view-more {
+  background: #3498db;
+  margin-top: 1rem;
+}
+
+.view-more:hover {
+  background: #2980b9;
+}
+
+/* Payment History Styles */
+.payment-history-section {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-top: 1.5rem;
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.history-table th {
+  background: #34495e;
+  color: #fff;
+  padding: 1rem;
+  text-align: left;
+  font-weight: bold;
+}
+
+.history-table td {
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.status {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.status.paid {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status.partial {
+  background: #fff3cd;
+  color: #856404;
+}
+
+/* Receipts Styles */
+.receipts-section {
+  margin-top: 1.5rem;
+}
+
+.receipts-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.receipt-card {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-left: 4px solid #3498db;
+  flex: 0 1 calc(33.333% - 0.75rem);
+  min-width: 250px;
+}
+
+.receipt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.5rem;
+}
+
+.receipt-header h3 {
+  color: #2c3e50;
+  margin: 0;
+}
+
+.receipt-details {
+  margin: 1rem 0;
+}
+
+.receipt-details p {
+  margin: 0.5rem 0;
+  color: #555;
+}
+
+.fees-included {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.fees-included strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2c3e50;
+}
+
+.fees-included ul {
+  list-style-position: inside;
+  padding: 0;
+  margin: 0;
+  color: #666;
+}
+
+.receipt-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Profile Styles */
+.profile-section {
+  margin-top: 1.5rem;
+}
+
+.profile-card {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.profile-view, .profile-edit-form {
+  margin-top: 1rem;
+}
+
+.profile-item {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.profile-item label {
+  font-weight: bold;
+  color: #2c3e50;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.profile-item p {
+  color: #555;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-family: Arial, sans-serif;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.form-actions button {
+  flex: 1;
+  padding: 0.8rem;
+  font-size: 1rem;
+}
+
+.profile-actions {
+  text-align: left;
+  margin-top: 1.5rem;
+}
+
+/* Navigation enhancements */
+/* .sidebar nav li:hover {
+  background: #34495e;
+  padding-left: 0.5rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.sidebar nav li.active {
+  background: #3498db;
+  padding: 0.5rem;
+  border-radius: 12px;
 } */
+
+/* Base style for all sidebar buttons */
+.btnhover {
+  cursor: pointer;
+  padding: 3px;
+  display: block;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover effect */
+.btnhover:hover {
+  /* background-color: #f0f0f0; */
+}
+
+/* Active link style */
+.btnhover.active {
+  background-color: #007bff; /* highlight color */
+  color: #fff;              /* text color when active */
+  font-weight: bold;        /* emphasize active link */
+}
+
+.card.clickable {
+  cursor: pointer;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card.clickable:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Error and loading states */
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .sidebar nav ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .sidebar nav li {
+    margin: 0.3rem;
+    padding: 0.5rem 0.8rem;
+    background: #34495e;
+    border-radius: 4px;
+  }
+
+  .pay-fees-container {
+    flex-direction: column;
+  }
+
+  .payment-summary {
+    position: static;
+    margin-top: 1rem;
+  }
+
+  .receipts-grid {
+    flex-direction: column;
+  }
+
+  .receipt-card {
+    flex: 0 1 auto;
+  }
+
+  .summary-cards {
+    flex-direction: column;
+  }
+
+  .details {
+    flex-direction: column;
+  }
+}

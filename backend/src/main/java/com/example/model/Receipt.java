@@ -5,8 +5,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "payments")
-public class Payment {
+@Table(name = "receipts")
+public class Receipt {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,21 +16,21 @@ public class Payment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private String transactionId;
-    private LocalDate paymentDate;
+    private String receiptId;
+    private LocalDate receiptDate;
     private BigDecimal amount;
-    private String status; // Paid, Partial, Pending
-    private String paymentMethod; // Credit Card, Bank Transfer, UPI
+    private String paymentMethod;
+    private String status; // Received, Pending
 
-    public Payment() {}
+    public Receipt() {}
 
-    public Payment(User user, String transactionId, LocalDate paymentDate, BigDecimal amount, String status, String paymentMethod) {
+    public Receipt(User user, String receiptId, LocalDate receiptDate, BigDecimal amount, String paymentMethod, String status) {
         this.user = user;
-        this.transactionId = transactionId;
-        this.paymentDate = paymentDate;
+        this.receiptId = receiptId;
+        this.receiptDate = receiptDate;
         this.amount = amount;
-        this.status = status;
         this.paymentMethod = paymentMethod;
+        this.status = status;
     }
 
     // Getters and Setters
@@ -50,20 +50,20 @@ public class Payment {
         this.user = user;
     }
 
-    public String getTransactionId() {
-        return transactionId;
+    public String getReceiptId() {
+        return receiptId;
     }
 
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
+    public void setReceiptId(String receiptId) {
+        this.receiptId = receiptId;
     }
 
-    public LocalDate getPaymentDate() {
-        return paymentDate;
+    public LocalDate getReceiptDate() {
+        return receiptDate;
     }
 
-    public void setPaymentDate(LocalDate paymentDate) {
-        this.paymentDate = paymentDate;
+    public void setReceiptDate(LocalDate receiptDate) {
+        this.receiptDate = receiptDate;
     }
 
     public BigDecimal getAmount() {
@@ -74,19 +74,19 @@ public class Payment {
         this.amount = amount;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public String getPaymentMethod() {
         return paymentMethod;
     }
 
     public void setPaymentMethod(String paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

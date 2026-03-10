@@ -1,14 +1,12 @@
 package com.example.repository;
 
-import com.example.model.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.model.Payment;
+import com.example.model.User;
 import java.util.List;
+import org.springframework.data.domain.Sort;
 
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
-
-    // get all payments of one student
-    List<Payment> findByStudentId(Long studentId);
-
-    // get all payments by status
-    List<Payment> findByStatus(String status);
+    List<Payment> findByUser(User user, Sort sort);
+    List<Payment> findByUser(User user);
 }

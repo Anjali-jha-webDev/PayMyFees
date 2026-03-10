@@ -3,7 +3,6 @@ import "./Loginstyle.css";
 import "boxicons/css/boxicons.min.css";
 import API from "../services/api";       // <-- API import
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 
 function RegisterPage() {
 
@@ -43,25 +42,11 @@ function RegisterPage() {
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ validation
-    if (!loginData.username || !loginData.password) {
-      toast.error("Please fill all login fields");
-      return;
-    }
-
     try {
       const res = await API.post("/auth/login", loginData);
 
       localStorage.setItem("user", JSON.stringify(res.data));
-
-      toast.success("Login Successful!");
-
-      // clear fields
-      setLoginData({
-        username: "",
-        password: "",
-      });
-
+      
       // role based navigation
       if (res.data.role === "ADMIN") {
         navigate("/admin");
@@ -70,7 +55,7 @@ function RegisterPage() {
       }
 
     } catch (err) {
-      toast.error("Login failed");
+      alert("Login failed");
     }
   };
 
@@ -78,32 +63,12 @@ function RegisterPage() {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ validation
-    if (
-      !registerData.username ||
-      !registerData.email ||
-      !registerData.password
-    ) {
-      toast.error("Please fill all register fields");
-      return;
-    }
-
     try {
       await API.post("/auth/register", registerData);
-
-      toast.success("Registered Successfully!");
-
-      // ✅ clear fields after register
-      setRegisterData({
-        username: "",
-        email: "",
-        password: "",
-      });
-
+      alert("Registered Successfully");
       setIsActive(false); // back to login
-
     } catch (err) {
-      toast.error("Registration failed");
+      alert("Registration failed");
     }
   };
 
@@ -120,7 +85,6 @@ function RegisterPage() {
               type="text"
               name="username"
               placeholder="Username"
-              value={loginData.username}
               onChange={handleLoginChange}
             />
             <i className="bx bx-user"></i>
@@ -131,7 +95,6 @@ function RegisterPage() {
               type="password"
               name="password"
               placeholder="Password"
-              value={loginData.password}
               onChange={handleLoginChange}
             />
             <i className="bx bx-lock-alt"></i>
@@ -164,7 +127,6 @@ function RegisterPage() {
               type="text"
               name="username"
               placeholder="Username"
-              value={registerData.username}
               onChange={handleRegisterChange}
             />
             <i className="bx bx-user"></i>
@@ -175,7 +137,6 @@ function RegisterPage() {
               type="email"
               name="email"
               placeholder="Email"
-              value={registerData.email}
               onChange={handleRegisterChange}
             />
             <i className="bx bx-envelope"></i>
@@ -186,7 +147,6 @@ function RegisterPage() {
               type="password"
               name="password"
               placeholder="Password"
-              value={registerData.password}
               onChange={handleRegisterChange}
             />
             <i className="bx bx-lock-alt"></i>
