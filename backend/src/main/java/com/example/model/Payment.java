@@ -16,77 +16,30 @@ public class Payment {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private String transactionId;
+    private String    transactionId;
     private LocalDate paymentDate;
     private BigDecimal amount;
-    private String status; // Paid, Partial, Pending
-    private String paymentMethod; // Credit Card, Bank Transfer, UPI
+    private String    status;         // PAID (direct — no more PENDING/APPROVED)
+    private String    paymentMethod;
+    private Integer   installmentNumber; // 1, 2, or 3 — null for legacy seed data
 
     public Payment() {}
 
-    public Payment(User user, String transactionId, LocalDate paymentDate, BigDecimal amount, String status, String paymentMethod) {
-        this.user = user;
-        this.transactionId = transactionId;
-        this.paymentDate = paymentDate;
-        this.amount = amount;
-        this.status = status;
-        this.paymentMethod = paymentMethod;
-    }
+    public Long       getId()                 { return id;                 }
+    public User       getUser()               { return user;               }
+    public String     getTransactionId()      { return transactionId;      }
+    public LocalDate  getPaymentDate()        { return paymentDate;        }
+    public BigDecimal getAmount()             { return amount;             }
+    public String     getStatus()             { return status;             }
+    public String     getPaymentMethod()      { return paymentMethod;      }
+    public Integer    getInstallmentNumber()  { return installmentNumber;  }
 
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public String getTransactionId() {
-        return transactionId;
-    }
-
-    public void setTransactionId(String transactionId) {
-        this.transactionId = transactionId;
-    }
-
-    public LocalDate getPaymentDate() {
-        return paymentDate;
-    }
-
-    public void setPaymentDate(LocalDate paymentDate) {
-        this.paymentDate = paymentDate;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
+    public void setId(Long id)                             { this.id                 = id;                 }
+    public void setUser(User user)                         { this.user               = user;               }
+    public void setTransactionId(String tid)               { this.transactionId      = tid;                }
+    public void setPaymentDate(LocalDate date)             { this.paymentDate        = date;               }
+    public void setAmount(BigDecimal amount)               { this.amount             = amount;             }
+    public void setStatus(String status)                   { this.status             = status;             }
+    public void setPaymentMethod(String method)            { this.paymentMethod      = method;             }
+    public void setInstallmentNumber(Integer num)          { this.installmentNumber  = num;                }
 }

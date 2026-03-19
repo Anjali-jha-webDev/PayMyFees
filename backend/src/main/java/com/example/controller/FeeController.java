@@ -1,28 +1,19 @@
 package com.example.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.example.service.FeeService;
 import com.example.dto.*;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-
+import com.example.service.FeeService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/fees")
 @CrossOrigin(origins = "*")
 public class FeeController {
-   
-    @Autowired
-    public FeeService feeService;
 
-    @GetMapping("/{username}")
+    @Autowired private FeeService feeService;
+
+    @GetMapping("/summary/{username}")
     public FeeSummary getFees(@PathVariable String username) {
         return feeService.getByUsername(username);
     }
@@ -41,5 +32,18 @@ public class FeeController {
     public StudentProfile getStudentProfile(@PathVariable String username) {
         return feeService.getStudentProfile(username);
     }
-}
 
+    // ── NEW: Submit a payment ───────────────────────────────────────────────
+    @PostMapping("/pay")
+    public PaymentResponse submitPayment(@RequestBody PaymentRequest request) {
+        return feeService.submitPayment(request);
+    }
+
+    // ── NEW: Update student profile ─────────────────────────────────────────
+    @PutMapping("/profile/{username}")
+    public StudentProfile updateStudentProfile(
+            @PathVariable String username,
+            @RequestBody StudentProfile updatedProfile) {
+        return feeService.updateStudentProfile(username, updatedProfile);
+    }
+}

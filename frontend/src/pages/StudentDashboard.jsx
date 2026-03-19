@@ -1,157 +1,107 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import "../App.css";
+import React from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
-import Sidebar from '../components/Sidebar';
+import { useFees } from "../components/FeeContext";
+import { AlertBanner } from "../components/StudentLayout";
 
 const StudentDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = React.useState({ name: "", id: "" });
-  const [fees, setFees] = React.useState({
-    total: 0,
-    paid: 0,
-    outstanding: 0,
-    breakdown: [],
-    deadlineReminder: ""
-  });
+  const { feeSummary, feeLoading } = useFees();
+
+  const [user, setUser]                     = React.useState({ name: "", id: "" });
   const [paymentHistory, setPaymentHistory] = React.useState([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
+
   React.useEffect(() => {
     const stored = localStorage.getItem("user");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        setUser({ name: parsed.username || "", id: parsed.id || "" });
-        
-        // Fetch user data from server
-        API.get(`/auth/user/${parsed.username}`)
-          .then((res) => {
-            if (res.data) {
-              setUser({ name: res.data.username, id: res.data.id });
-            }
-          })
-          .catch((err) => {
-            console.warn("could not refresh user", err);
-          });
-
-        // Fetch fees data
-        API.get(`/fees/${parsed.username}`)
-          .then((res) => {
-            setFees(res.data);
-          })
-          .catch((err) => {
-            setError("Failed to load fees");
-            console.error(err);
-          });
-
-        // Fetch payment history
-        API.get(`/fees/history/${parsed.username}`)
-          .then((res) => {
-            setPaymentHistory(res.data);
-          })
-          .catch((err) => {
-            console.warn("Failed to load payment history", err);
-          });
-      } catch (e) {
-        console.error("failed to parse user from localStorage", e);
-      } finally {
-        setLoading(false);
-      }
-    }
+    if (!stored) return;
+    const parsed = JSON.parse(stored);
+    setUser({ name: parsed.username || "", id: parsed.id || "" });
+    API.get(`/fees/history/${parsed.username}`)
+      .then(res => setPaymentHistory(res.data))
+      .catch(() => {});
   }, []);
 
-  const handleNavigation = (path) => {
-    navigate(path);
+  const badgeClass = (s) => {
+    if (s === "PAID" || s === "APPROVED") return "badge badge-green";
+    if (s === "PARTIAL")                  return "badge badge-yellow";
+    if (s === "REJECTED")                 return "badge badge-red";
+    return "badge badge-yellow";
   };
 
-  if (loading) return <div className="dashboard-container"><p>Loading...</p></div>;
+  if (feeLoading) return (
+    <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"60vh", gap:"14px", color:"#64748b" }}>
+      <div className="loading-spinner" />
+      Loading your dashboard...
+    </div>
+  );
+
+  const fees = feeSummary || { total:0, paid:0, remaining:0, breakdown:[], deadlineReminder:"" };
 
   return (
-    <div className="dashboard-container">
-      <Sidebar />
-      <main className="student-main">
-        <header className="dashboard-header">
-          <h1>PayMyFees</h1>
-          <div className="user-info">
-            <span>Welcome, {user.name}</span>
-            <button
-              className="logout-button"
-              onClick={() => {
-                localStorage.removeItem("user");
-                window.location.href = "/"; // simple redirect to login
-              }}
-            >
-              Logout
-            </button>
-          </div>
-        </header>
-        {error && <section className="error-message">{error}</section>}
-        {fees.deadlineReminder && (
-          <section className="reminder">
-            <span>⚠️ Reminder: {fees.deadlineReminder}</span>
-          </section>
-        )}
-        <section className="summary-cards">
-            <div className="card clickable" onClick={() => handleNavigation('/student/fee-summary')}>
-            <h3>Total Fees</h3>
-            <p>₹{fees.total?.toLocaleString()}</p>
-          </div>
-          <div className="card clickable" onClick={() => handleNavigation('/student/fee-summary')}>
-            <h3>Amount Paid</h3>
-            <p>₹{fees.paid?.toLocaleString()}</p>
-          </div>
-          <div className="card clickable" onClick={() => handleNavigation('/student/pay-fees')}>
-            <h3>Outstanding Balance</h3>
-            <p>₹{fees.outstanding?.toLocaleString()}</p>
-          </div>
-        </section>
-        <section className="details">
-          <div className="breakdown">
-            <h3>Fee Breakdown</h3>
-            <ul>
-                {fees.breakdown && fees.breakdown.map((item, idx) => (
-                <li key={idx}>
-                  <span>{item.label}</span>
-                  <span>₹{item.amount?.toLocaleString()}</span>
-                </li>
+    <>
+      <h2 className="section-title">Welcome back, {user.name}</h2>
+
+      {/* Due date alert banner */}
+      <AlertBanner />
+
+      {/* Stat cards */}
+      <div className="stats-grid">
+        <div className="stat-card blue" style={{ cursor:"pointer" }} onClick={() => navigate("/student/fee-summary")}>
+          <div className="stat-icon"><i className="bx bxs-rupee"></i></div>
+          <div><p className="stat-label">Total Fees</p><h3 className="stat-number">₹{fees.total?.toLocaleString()}</h3></div>
+        </div>
+        <div className="stat-card green" style={{ cursor:"pointer" }} onClick={() => navigate("/student/fee-summary")}>
+          <div className="stat-icon"><i className="bx bxs-check-circle"></i></div>
+          <div><p className="stat-label">Amount Paid</p><h3 className="stat-number">₹{fees.paid?.toLocaleString()}</h3></div>
+        </div>
+        <div className="stat-card red" style={{ cursor:"pointer" }} onClick={() => navigate("/student/pay-fees")}>
+          <div className="stat-icon"><i className="bx bxs-time"></i></div>
+          <div><p className="stat-label">Remaining</p><h3 className="stat-number">₹{fees.remaining?.toLocaleString()}</h3></div>
+        </div>
+      </div>
+
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"24px" }}>
+        <div className="content-card">
+          <h3>Fee Breakdown</h3>
+          {fees.breakdown?.length > 0 ? (
+            <>
+              {fees.breakdown.map((item, idx) => (
+                <div className="fee-list-item" key={idx}>
+                  <span className="fee-list-label">{item.label}</span>
+                  <span className="fee-list-amount">₹{item.amount?.toLocaleString()}</span>
+                </div>
               ))}
-            </ul>
-            <button onClick={() => handleNavigation('/student/fee-summary')} className="view-more">View Details</button>
-          </div>
-          <div className="payments">
-            <h3>Recent Payment History</h3>
-            {paymentHistory && paymentHistory.length > 0 ? (
-              <>
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Trans. ID</th>
-                      <th>Date</th>
-                      <th>Amount</th>
-                      <th>Status</th>
+              <button className="btn-primary" onClick={() => navigate("/student/fee-summary")}>View Full Summary</button>
+            </>
+          ) : (
+            <p style={{ color:"#94a3b8", fontSize:"14px" }}>No fee data found.</p>
+          )}
+        </div>
+
+        <div className="content-card">
+          <h3>Recent Payments</h3>
+          {paymentHistory?.length > 0 ? (
+            <>
+              <table className="student-table">
+                <thead><tr><th>Trans. ID</th><th>Amount</th><th>Status</th></tr></thead>
+                <tbody>
+                  {paymentHistory.slice(0,4).map((p,i) => (
+                    <tr key={i}>
+                      <td style={{ fontFamily:"monospace", fontSize:"13px" }}>{p.transactionId}</td>
+                      <td>₹{p.amount?.toLocaleString()}</td>
+                      <td><span className={badgeClass(p.status)}>{p.status}</span></td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {paymentHistory.slice(0, 3).map((p) => (
-                      <tr key={p.transactionId}>
-                          <td>{p.transactionId}</td>
-                          <td>{p.date}</td>
-                          <td>₹{p.amount?.toLocaleString()}</td>
-                          <td>{p.status}</td>
-                        </tr>
-                    ))}
-                  </tbody>
-                </table>
-                <button onClick={() => handleNavigation('/student/payment-history')} className="view-more">View All</button>
-              </>
-            ) : (
-              <p>No payment history found.</p>
-            )}
-          </div>
-        </section>
-      </main>
-    </div>
+                  ))}
+                </tbody>
+              </table>
+              <button className="btn-primary" onClick={() => navigate("/student/payment-history")}>View All</button>
+            </>
+          ) : (
+            <p style={{ color:"#94a3b8", fontSize:"14px" }}>No payment history found.</p>
+          )}
+        </div>
+      </div>
+    </>
   );
 };
 

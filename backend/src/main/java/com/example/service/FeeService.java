@@ -6,138 +6,225 @@ import org.springframework.data.domain.Sort;
 import com.example.dto.*;
 import com.example.model.*;
 import com.example.repository.*;
-
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class FeeService {
 
-    @Autowired
-    private UserRepository userRepository;
+    @Autowired private UserRepository             userRepository;
+    @Autowired private PaymentRepository          paymentRepository;
+    @Autowired private ReceiptRepository          receiptRepository;
+    @Autowired private StudentProfileRepository   studentProfileRepository;
+    @Autowired private CourseFeeRepository        courseFeeRepository;
 
-    @Autowired
-    private FeeRepository feeRepository;
-
-    @Autowired
-    private PaymentRepository paymentRepository;
-
-    @Autowired
-    private ReceiptRepository receiptRepository;
-
-    @Autowired
-    private StudentProfileRepository studentProfileRepository;
-
+    // ── FEE SUMMARY + INSTALLMENTS ─────────────────────────────────────────
     public FeeSummary getByUsername(String username) {
         User user = userRepository.findByUsername(username);
-        if (user == null) {
-            return new FeeSummary();
+        if (user == null) return new FeeSummary();
+
+        // Total from course fees
+        List<CourseFee> courseFees = new ArrayList<>();
+        if (user.getCourse() != null) {
+            courseFees = courseFeeRepository.findByCourse(user.getCourse());
         }
 
-        // Fetch all fees for this user
-        List<Fee> fees = feeRepository.findByUser(user);
-        
-        // Calculate totals
-        BigDecimal total = BigDecimal.ZERO;
-        BigDecimal paid = BigDecimal.ZERO;
-        
-        for (Fee fee : fees) {
-            total = total.add(fee.getAmount());
-            if ("PAID".equals(fee.getStatus())) {
-                paid = paid.add(fee.getAmount());
-            }
-        }
+        double total = courseFees.stream()
+            .mapToDouble(f -> f.getAmount().doubleValue())
+            .sum();
 
-        BigDecimal outstanding = total.subtract(paid);
+        // Sum of paid payments only
+        List<Payment> payments = paymentRepository
+            .findByUser(user, Sort.by(Sort.Direction.DESC, "paymentDate"));
 
-        // Convert to DTO
-        List<FeeBreakdown> breakdown = fees.stream()
-                .map(f -> new FeeBreakdown(f.getLabel(), f.getAmount().doubleValue(), 
-                        f.getDueDate().toString()))
-                .collect(Collectors.toList());
+        double paid = payments.stream()
+            .filter(p -> "PAID".equals(p.getStatus()))
+            .mapToDouble(p -> p.getAmount().doubleValue())
+            .sum();
+
+        double remaining = Math.max(0, total - paid);
+
+        // ── BUILD 3 INSTALLMENTS ───────────────────────────────────────────
+        // inst1 = inst2 = floor(total/3), inst3 = total - inst1 - inst2 (handles rounding)
+        double inst1Amount = Math.floor((total / 3) * 100) / 100.0;
+        double inst2Amount = inst1Amount;
+        double inst3Amount = Math.round((total - inst1Amount - inst2Amount) * 100.0) / 100.0;
+
+        // Determine which installments are paid from the total paid amount
+        boolean inst1Paid = paid >= inst1Amount - 0.01;
+        boolean inst2Paid = paid >= inst1Amount + inst2Amount - 0.01;
+        boolean inst3Paid = paid >= total - 0.01;
+
+        List<InstallmentInfo> installments = Arrays.asList(
+            new InstallmentInfo(1, inst1Amount, inst1Paid ? "PAID" : "UNPAID", !inst1Paid),
+            new InstallmentInfo(2, inst2Amount, inst2Paid ? "PAID" : "UNPAID", inst1Paid && !inst2Paid),
+            new InstallmentInfo(3, inst3Amount, inst3Paid ? "PAID" : "UNPAID", inst2Paid && !inst3Paid)
+        );
+
+        // Fee breakdown for FeeSummaryPage
+        List<FeeBreakdown> breakdown = courseFees.stream()
+            .map(f -> new FeeBreakdown(
+                f.getFeeLabel(),
+                f.getAmount().doubleValue(),
+                f.getDueDate() != null ? f.getDueDate().toString() : "—"
+            ))
+            .collect(Collectors.toList());
 
         FeeSummary summary = new FeeSummary();
-        summary.setTotal(total.doubleValue());
-        summary.setPaid(paid.doubleValue());
-        summary.setOutstanding(outstanding.doubleValue());
+        summary.setTotal(total);
+        summary.setPaid(paid);
+        summary.setRemaining(remaining);
+        summary.setInstallments(installments);
         summary.setBreakdown(breakdown);
-        summary.setDeadlineReminder("Your educational fees are due by the specified deadline. Please make timely payments.");
-
+        summary.setCourseName(user.getCourse() != null ? user.getCourse().getName() : "");
+        summary.setDeadlineReminder(
+            user.getCourse() != null
+                ? "Enrolled in " + user.getCourse().getName() + ". Pay fees before the due date."
+                : "No course assigned yet. Contact admin."
+        );
         return summary;
     }
 
+    // ── SUBMIT PAYMENT (DIRECT PAID — no approval) ─────────────────────────
+    public PaymentResponse submitPayment(PaymentRequest request) {
+        User user = userRepository.findByUsername(request.getUsername());
+        if (user == null) throw new RuntimeException("User not found");
+
+        // Guard: don't allow double-payment of same installment
+        FeeSummary current = getByUsername(request.getUsername());
+        List<InstallmentInfo> insts = current.getInstallments();
+        int instNum = request.getInstallmentNumber();
+
+        if (instNum < 1 || instNum > 3)
+            throw new RuntimeException("Invalid installment number");
+
+        InstallmentInfo target = insts.get(instNum - 1);
+        if ("PAID".equals(target.getStatus()))
+            throw new RuntimeException("Installment " + instNum + " is already paid");
+
+        if (!target.isPayable())
+            throw new RuntimeException("Please pay previous installments first");
+
+        // Generate IDs
+        String timestamp     = String.valueOf(System.currentTimeMillis());
+        String transactionId = "T" + timestamp;
+        String receiptId     = "R" + timestamp;
+
+        // Save Payment — status PAID directly
+        Payment payment = new Payment();
+        payment.setUser(user);
+        payment.setTransactionId(transactionId);
+        payment.setPaymentDate(LocalDate.now());
+        payment.setAmount(BigDecimal.valueOf(target.getAmount()));
+        payment.setStatus("PAID");
+        payment.setPaymentMethod(request.getPaymentMethod());
+        payment.setInstallmentNumber(instNum);
+        paymentRepository.save(payment);
+
+        // Save Receipt — PAID directly
+        com.example.model.Receipt receipt = new com.example.model.Receipt();
+        receipt.setUser(user);
+        receipt.setReceiptId(receiptId);
+        receipt.setReceiptDate(LocalDate.now());
+        receipt.setAmount(BigDecimal.valueOf(target.getAmount()));
+        receipt.setPaymentMethod(request.getPaymentMethod());
+        receipt.setStatus("PAID");
+        receiptRepository.save(receipt);
+
+        return new PaymentResponse(
+            transactionId,
+            receiptId,
+            "PAID",
+            target.getAmount(),
+            instNum,
+            request.getPaymentMethod(),
+            LocalDate.now().toString(),
+            "Installment " + instNum + " paid successfully!"
+        );
+    }
+
+    // ── PAYMENT HISTORY ────────────────────────────────────────────────────
     public List<PaymentTransaction> getPaymentHistory(String username) {
         User user = userRepository.findByUsername(username);
-        if (user == null) {
-            return new ArrayList<>();
-        }
-
-        // Fetch payments from database, sorted by date (newest first)
-        List<Payment> payments = paymentRepository.findByUser(user, Sort.by(Sort.Direction.DESC, "paymentDate"));
-
-        return payments.stream()
-                .map(p -> new PaymentTransaction(
-                        p.getTransactionId(),
-                        p.getPaymentDate().toString(),
-                        p.getAmount().doubleValue(),
-                        p.getStatus(),
-                        p.getPaymentMethod()
-                ))
-                .collect(Collectors.toList());
+        if (user == null) return new ArrayList<>();
+        return paymentRepository
+            .findByUser(user, Sort.by(Sort.Direction.DESC, "paymentDate"))
+            .stream()
+            .map(p -> new PaymentTransaction(
+                p.getTransactionId(),
+                p.getPaymentDate().toString(),
+                p.getAmount().doubleValue(),
+                p.getStatus(),
+                p.getPaymentMethod()
+            ))
+            .collect(Collectors.toList());
     }
 
+    // ── RECEIPTS ───────────────────────────────────────────────────────────
     public List<com.example.dto.Receipt> getReceipts(String username) {
         User user = userRepository.findByUsername(username);
-        if (user == null) {
-            return new ArrayList<>();
-        }
-
-        // Fetch receipts from database
-        List<com.example.model.Receipt> receiptEntities = receiptRepository.findByUser(user);
-
-        return receiptEntities.stream()
-                .map(r -> {
-                    com.example.dto.Receipt receipt = new com.example.dto.Receipt();
-                    receipt.setReceiptId(r.getReceiptId());
-                    receipt.setDate(r.getReceiptDate().toString());
-                    receipt.setAmount(r.getAmount().doubleValue());
-                    receipt.setPaymentMethod(r.getPaymentMethod());
-                    receipt.setStatus(r.getStatus());
-                    receipt.setFeesIncluded(new ArrayList<>()); // Can be expanded based on requirements
-                    return receipt;
-                })
-                .collect(Collectors.toList());
+        if (user == null) return new ArrayList<>();
+        return receiptRepository.findByUser(user).stream()
+            .map(r -> {
+                com.example.dto.Receipt dto = new com.example.dto.Receipt();
+                dto.setReceiptId(r.getReceiptId());
+                dto.setDate(r.getReceiptDate().toString());
+                dto.setAmount(r.getAmount().doubleValue());
+                dto.setPaymentMethod(r.getPaymentMethod());
+                dto.setStatus(r.getStatus());
+                dto.setFeesIncluded(new ArrayList<>());
+                return dto;
+            })
+            .collect(Collectors.toList());
     }
 
+    // ── STUDENT PROFILE (GET) ──────────────────────────────────────────────
     public com.example.dto.StudentProfile getStudentProfile(String username) {
         User user = userRepository.findByUsername(username);
-        if (user == null) {
-            return null;
-        }
-
+        if (user == null) return null;
         Optional<com.example.model.StudentProfile> profile = studentProfileRepository.findByUser(user);
-
         if (profile.isPresent()) {
             com.example.model.StudentProfile p = profile.get();
             return new com.example.dto.StudentProfile(
-                    p.getStudentId(),
-                    p.getUser().getUsername(),
-                    p.getUser().getEmail(),
-                    p.getEnrollmentYear(),
-                    p.getProgram(),
-                    p.getPhone(),
-                    p.getAddress()
+                p.getStudentId(), user.getUsername(), user.getEmail(),
+                p.getEnrollmentYear(), p.getProgram(), p.getPhone(), p.getAddress()
             );
         }
-
         return null;
     }
 
-    public FeeSummary getByusername(String username) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    // ── UPDATE STUDENT PROFILE ─────────────────────────────────────────────
+    public com.example.dto.StudentProfile updateStudentProfile(
+            String username, com.example.dto.StudentProfile updatedProfile) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) throw new RuntimeException("User not found");
+
+        if (updatedProfile.getEmail() != null) {
+            user.setEmail(updatedProfile.getEmail());
+            userRepository.save(user);
+        }
+
+        com.example.model.StudentProfile p = studentProfileRepository
+            .findByUser(user)
+            .orElseGet(() -> {
+                com.example.model.StudentProfile np = new com.example.model.StudentProfile();
+                np.setUser(user);
+                np.setStudentId("STU" + System.currentTimeMillis());
+                return np;
+            });
+
+        if (updatedProfile.getPhone()          != null) p.setPhone(updatedProfile.getPhone());
+        if (updatedProfile.getAddress()        != null) p.setAddress(updatedProfile.getAddress());
+        if (updatedProfile.getEnrollmentYear() != null) p.setEnrollmentYear(updatedProfile.getEnrollmentYear());
+        if (updatedProfile.getProgram()        != null) p.setProgram(updatedProfile.getProgram());
+        studentProfileRepository.save(p);
+
+        return new com.example.dto.StudentProfile(
+            p.getStudentId(), user.getUsername(), user.getEmail(),
+            p.getEnrollmentYear(), p.getProgram(), p.getPhone(), p.getAddress()
+        );
     }
 }
-
